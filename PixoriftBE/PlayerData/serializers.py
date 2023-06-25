@@ -4,10 +4,10 @@ from .models import *
 
 User = get_user_model()
 
-class PlayerLevelSerial(serializers.ModelSerializer):
+class PlayerDataSerial(serializers.ModelSerializer):
     player = serializers.CharField(source='player.username')
-    full_xp = serializers.IntegerField(source='fullxp', read_only=True)
+    full_xp = serializers.CharField(default=1000)
 
     class Meta:
         model = PlayerData
-        fields = ('player', 'level', 'xp', 'full_xp', 'totalxp')
+        fields = '__all__'

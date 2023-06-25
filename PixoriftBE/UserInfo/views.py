@@ -2,6 +2,7 @@ from django.shortcuts import render
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.decorators import api_view, permission_classes
 from django.contrib.auth import get_user_model, authenticate
 from .serializers import *
@@ -10,6 +11,7 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny
 from .tauth import tauth
+from .forms import SignUpForm, UpdateUserForm
 from django.core.files.storage import FileSystemStorage
 
 User = get_user_model()
@@ -48,10 +50,9 @@ class create_account(APIView):
 			username = request.data.get('username')
 			password = request.data.get('password')
 			UserLogin = authenticate(username=username, password=password)
-			PlayerData.objects.create(player=UserLogin)
 			logintoken = Token.objects.create(user=UserLogin)
 			return Response({'token': logintoken.key, 'state': 'Success'}, status=status.HTTP_200_OK)
-		return Response({'errors': usersignup.errors, 'state': 'Denied'}, status=status.HTTP_400_BAD_REQUEST)
+		return Response({'forminfo': usersignup.errors, 'state': 'Denied'}, status=status.HTTP_400_BAD_REQUEST)
 
 class change_account(APIView):
 	def post(self, request):
@@ -59,14 +60,13 @@ class change_account(APIView):
 		username = self.request.data.get('oldusername')
 		if not tauth(vtoken, username)['status']:
 			return tauth(vtoken, username)['response']
-		current_user = tauth(vtoken, username)['response']
 		updaterequest = self.request.data
-		userupdate = UpdateUserSerial(data=updaterequest, instance=current_user)
+		userupdate = UpdateUserSerial(data=updaterequest, instance=tauth(vtoken, username)['response'])
 		if userupdate.is_valid():
 			userupdate.save()
-			serializer = UserSerializer([User.objects.get(username=self.request.data.get('username'))], many=True)
-			return Response({'state': 'Success', 'update': serializer.data}, status=status.HTTP_200_OK)
-		return Response({'errors': userupdate.errors, 'state': 'Denied'}, status=status.HTTP_400_BAD_REQUEST)
+			serializer = UserSerializer([tauth(vtoken, username)['response']], many=True)
+			return Response({'state': 'Success'}, status=status.HTTP_200_OK)
+		return Response({'forminfo': userupdate.errors, 'state': 'Denied'}, status=status.HTTP_400_BAD_REQUEST)
 
 class delete_account(APIView):
 	def post(self, request):
@@ -79,7 +79,7 @@ class delete_account(APIView):
 		if not tauth(vtoken, UserVerify.username)['status']:
 			return Response({'error': 'Invalid login token! Account refuses to be deleted.', 'state': 'Denied'}, status=status.HTTP_401_UNAUTHORIZED)
 		UserVerify.delete()
-		return Response({'state': 'Success'})
+		return Response({'state': 'success'})
 
 class change_password(APIView):
 	def post(self, request):

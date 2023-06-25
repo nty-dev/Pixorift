@@ -1,5 +1,5 @@
 """
-WSGI config for PixoriftBE project.
+WSGI config for RetroidBE project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 

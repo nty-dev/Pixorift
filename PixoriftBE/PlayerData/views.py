@@ -13,55 +13,69 @@ from django.core import serializers
 from .serializers import *
 from .models import *
 # Create your views here.
-
 User = get_user_model()
 
-class Get_Level(APIView):
-    def post(self, request):
-        username = self.request.data.get('username')
-        vtoken = self.request.data.get('Auth')
+class PlayerDataInfo(APIView):
+    def get(self, request):
+        username = self.request.GET.get('username')
+        vtoken = self.request.GET.get('Auth')
         if not tauth(vtoken, username)['status']:
             return tauth(vtoken, username)['response']
         current_user = tauth(vtoken, username)['response']
-        if not PlayerData.objects.filter(player=current_user).exists():
+        if PlayerData.objects.filter(player=current_user).exists():
+            PDobj = PlayerData.objects.get(player=current_user)
+            return Response({'state': 'Success', 'Level': PDobj.level, 'XP': PDobj.xp, 'full_xp': 1000})
+        else:
             PlayerData.objects.create(player=current_user)
-        res = PlayerLevelSerial([PlayerData.objects.get(player=current_user)], many=True).data[0]
-        return Response({'state':'Success', 'data':res}, status=status.HTTP_200_OK)
+            PDobj = PlayerData.objects.get(player=current_user)
+            return Response({'state': 'Success', 'Level': PDobj.level, 'XP': PDobj.xp, 'full_xp': 1000})
 
-class EditLevel(APIView):
-    def post(self, request):
-        username = self.request.data.get('username')
-        vtoken = self.request.data.get('Auth')
+@method_decorator(cache_page(60), name='dispatch')
+class PlayerDataLB(APIView):
+    def get(self, request):
+        PDQuery = PlayerData.objects.order_by('level', 'xp').reverse()[:20]
+        PDinfo = PlayerDataSerial(PDQuery, many=True).data
+        runno = 1
+        for i in PDinfo:
+            i['position'] = runno
+            runno = runno +1
+        return Response({'info': PDinfo})
+
+class AdminPDAddition(APIView):
+    def get(self, request):
+        username = self.request.GET.get('username')
+        vtoken = self.request.GET.get('Auth')
+        amount = self.request.GET.get('amount')
+        editusername = self.request.GET.get('editusername')
+        try:
+            amount = int(amount)
+        except:
+            return Response({'state': 'Denied', 'Error': 'Amount is not integer.'}, status=status.HTTP_400_BAD_REQUEST)
         if not tauth(vtoken, username)['status']:
             return tauth(vtoken, username)['response']
         current_user = tauth(vtoken, username)['response']
-        if not current_user.is_superuser:
-            return Response({'state': 'Denied', 'reason': 'You are not a superuser!'}, status=status.HTTP_401_UNAUTHORIZED)
-        changeuser = self.request.data.get('changeusername')
-        amount = self.request.data.get('amount')
-        if type(amount) != int:
-            try:
-                amount = int(amount)
-            except:
-                return Response({'state': 'Denied', 'reason': 'Amount is not integer.'}, status=status.HTTP_400_BAD_REQUEST)
-        if changeuser == None:
-            changeuser = current_user
-        elif not User.objects.filter(username=changeuser).exists():
-            return Response({'state': 'Denied', 'reason': 'User does not exist!'}, status=status.HTTP_400_BAD_REQUEST)
+        if editusername == None or not User.objects.filter(username=editusername).exists():
+            editusername = current_user.username
+        edituser = User.objects.get(username=editusername)
+        if current_user.is_superuser:
+            if PlayerData.objects.filter(player=edituser).exists():
+                PDobj = PlayerData.objects.get(player=edituser)
+            else:
+                PlayerData.objects.create(player=edituser)
+                PDobj = PlayerData.objects.get(player=edituser)
+            PDobj.xp_gain(amount)
+            return Response({'state': 'Success', 'username': editusername, 'Level': PDobj.level, 'XP': PDobj.xp})
         else:
-            changeuser = User.objects.get(username=changeuser)
-        editlvl = self.request.data.get('editlvl')
-        if editlvl == 't':
-            editlevel = True
-        elif editlvl == 'f':
-            editlevel = False
-        else:
-            editlevel = bool(editlvl)
-        if not PlayerData.objects.filter(player=changeuser).exists():
-            PlayerData.objects.create(player=changeuser)
-        if editlevel:
-            PlayerData.objects.get(player=changeuser).level_edit(amount)
-        else:
-            PlayerData.objects.get(player=changeuser).xp_edit(amount)
-        res = PlayerLevelSerial([PlayerData.objects.get(player=changeuser)], many=True).data[0]
-        return Response({'state':'Success', 'data':res}, status=status.HTTP_200_OK)
+            return Response({'state': 'Denied', 'Error': 'You do not have permissions to use this command!'}, status=status.HTTP_401_UNAUTHORIZED)
+
+class Test(APIView):
+    def post(self, request):
+        print(self.request.data['test'])
+        image_test = self.request.data.get('images')
+        b = 0
+        for i in image_test:
+            b = b + 1
+        print(b)
+        t = self.request.data
+        t['images'] = None
+        return Response(self.request.data)

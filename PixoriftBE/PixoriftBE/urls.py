@@ -25,6 +25,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('user/', include('UserInfo.urls')),
     path('player/', include('PlayerData.urls')),
-    path('rifts/', include('Rifts.urls')),
-    path('um/', include('PixoUM.urls')),
+    path('submit/', include('ImageRecog.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

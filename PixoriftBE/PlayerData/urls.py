@@ -4,8 +4,9 @@ from rest_framework.urlpatterns import format_suffix_patterns
 from .views import *
 
 urlpatterns = [
-    path('', Get_Level.as_view()),
-    path('admin/', EditLevel.as_view()),
+    path('info/', PlayerDataInfo.as_view()),
+    path('admin_add/', AdminPDAddition.as_view()),
+    path('lb/', PlayerDataLB.as_view())
 ]
 
 print('Player Data loaded.')

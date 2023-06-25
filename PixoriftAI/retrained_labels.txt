@@ -1,0 +1,17 @@
+airplane
+bench seat
+boat
+car
+computer mouse
+flower
+fridge
+house
+playground
+pond
+road
+rubbish bin
+sidewalk
+stop sign
+tree
+truck
+vending machine

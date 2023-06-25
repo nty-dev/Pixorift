@@ -20,7 +20,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'k0uu#m@3bvc&u%k8=6uo6(oy$glk%6!g%z48$6!fwi#qwbqdlg'
+SECRET_KEY = '1uwxqq$m&azm&9+g@0zih_5+mzb2hds0j*v1#h8c1%qt^*k2@$'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -41,8 +41,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'UserInfo.apps.UserinfoConfig',
     'PlayerData.apps.PlayerdataConfig',
-    'Rifts.apps.RiftsConfig',
-    'PixoUM.apps.PixoumConfig',
+    'ImageRecog.apps.ImagerecogConfig',
+    'RPosts.apps.RpostsConfig',
     'rest_framework.authtoken',
     'PixoriftBE',
     'django_cleanup',
@@ -133,7 +133,6 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
-STATIC_URL = '/static/'
 STATIC_URL = '/static/'
 
 MEDIA_URL = '/media/'
